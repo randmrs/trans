@@ -3,11 +3,11 @@ from scapy.all import *
 UsableNeighbors = []
 
 
-def ICMP(dstip, num = 100, iface):
+def icmp(dstip,  iface, num = 100):
     #totallen = num + 42
     load = bytes('test', 'utf-8').zfill(num)
     pkt = Ether(dst = "ff:ff:ff:ff:ff:ff")/IP(dst=dstip,ttl=2, flags = 2)/ICMP()/load
-    ans, unans = srp(pkt, iface='h1-eth0', timeout = 1)
+    ans, unans = srp(pkt, iface=iface, timeout = 1)
     if len(ans) == 0:
         #没有回应
         return False
@@ -22,8 +22,8 @@ def ICMP(dstip, num = 100, iface):
         return False
 
 
-def ProbeSingleNeighbor(pkt):
-    ans, unans = srp(pkt, iface='h1-eth0', timeout = 1)
+def ProbeSingleNeighbor(pkt, iface):
+    ans, unans = srp(pkt, iface=iface, timeout = 0.06)
     if len(ans) == 0:
         #没有回应
         return False
@@ -39,11 +39,10 @@ def BrouteForce(subnet):
     #example subnet = "10.0.0.1/24"
     ips = IP(dst = subnet)
 
-def ProbeLiveNeighbors(subnet):
+def ProbeLiveNeighbors(subnet, iface):
     ips = IP(dst = subnet, ttl = 2)
     for ip in ips:
         pkt = Ether(dst = "ff:ff:ff:ff:ff:ff")/ip/ICMP()
-        ans = ProbeSingleNeighbor(pkt)
+        ans = ProbeSingleNeighbor(pkt, iface)
         if ans:
             UsableNeighbors.append(ans)
-
