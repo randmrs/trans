@@ -35,9 +35,6 @@ def ProbeSingleNeighbor(pkt, iface):
                         return rcv.sprintf(r"%IP.src%")#, rcv.sprintf(r"%Ether.src%")
         return False
 
-def BrouteForce(subnet):
-    #example subnet = "10.0.0.1/24"
-    ips = IP(dst = subnet)
 
 def ProbeLiveNeighbors(subnet, iface):
     ips = IP(dst = subnet, ttl = 2)
@@ -46,3 +43,23 @@ def ProbeLiveNeighbors(subnet, iface):
         ans = ProbeSingleNeighbor(pkt, iface)
         if ans:
             UsableNeighbors.append(ans)
+
+            
+def BrouteForce(subnet, iface):
+    #the error between real MTU and estimated MTU
+    margin = 4
+    
+    low = 1457
+    high = 2*low
+    for ip in UsableNeighbors:
+        while True:
+            if (high - low) <= margin:
+                EstimatedMTU[ip]["icmp"] = low
+                break
+            if icmp(ip, iface, num = high):
+                low = high
+                high = 2 * high
+            else if icmp(ip, iface, num = int((high + low)/2) + 1):
+                low = int((high + low)/2) + 1
+            else:
+                high = int((high + low)/2) + 1
